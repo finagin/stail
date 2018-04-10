@@ -1,0 +1,57 @@
+#!/bin/bash
+
+SERVER=false;
+GREP=false;
+LOG_PATH=false;
+
+TRACING=""
+
+COMMAND="ssh ";
+
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -s|--server)
+		SERVER="$2"
+		shift # past argument
+		shift # past value
+		;;
+    -g|--greg)
+		GREP="$2"
+		shift # past argument
+		shift # past value
+		;;
+    -p|--path)
+		LOG_PATH="$2"
+		shift # past argument
+		shift # past value
+		;;
+esac
+done
+
+if [[ ${SERVER} != false ]]; then
+	COMMAND="${COMMAND}${SERVER} tail -f ";
+else
+	echo 'Server is required argument';
+	exit 1;
+fi
+
+if [[ ${LOG_PATH} != false ]]; then
+	LOG_FILE="${LOG_PATH}/storage/logs/laravel-$(date '+%Y-%m-%d').log"
+	COMMAND="${COMMAND}${LOG_FILE}";
+else
+	echo 'Path to logs directory is required argument';
+	exit 1;
+fi
+
+if [[ ${GREP} != false ]]; then
+	TRACING=" tracing \"${GREP}\""
+	COMMAND="${COMMAND} | grep '${GREP}'";
+fi
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] stail.INFO: ${LOG_FILE}${TRACING}"
+
+eval ${COMMAND}
+
